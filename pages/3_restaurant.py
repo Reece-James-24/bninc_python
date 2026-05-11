@@ -1,8 +1,8 @@
 import requests
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 class RestaurantService:
     def __init__(self):
@@ -32,6 +32,7 @@ class RestaurantService:
 import streamlit as st
 import random
 import pandas as pd
+import pydeck as pdk
 
 # 페이지 제목
 st.title("🍜 맛집 한눈에")
@@ -44,7 +45,7 @@ if 'restaurant_results' not in st.session_state:
 # 사이드바 설정
 with st.sidebar:
     st.header("📍 위치 및 검색 설정")
-    # 기본값: 서울역 인근
+    # 기본값: 당산역 인근
     lat = st.number_input("위도(Latitude)", value=37.53051, format="%.6f")
     lon = st.number_input("경도(Longitude)", value=126.8986, format="%.6f")
     radius = st.slider("검색 반경(m)", 500, 3000, 1000, step=500)
@@ -78,10 +79,40 @@ if st.session_state.restaurant_results:
     
     # 2. 지도 표시
     df = pd.DataFrame([
-        {'lat': float(p['y']), 'lon': float(p['x']), 'name': p['place_name']} 
+        {'lat': float(p['y']), 'lon': float(p['x']), 'name': p['place_name'], 'address':p['road_address_name']} 
         for p in results
     ])
-    st.map(df)
+    # st.map(df)
+    st.pydeck_chart(pdk.Deck(
+        map_style=None, # 지도 스타일
+        initial_view_state=pdk.ViewState(
+            latitude=float(lat),
+            longitude=float(lon),
+            zoom=16, # 확대 레벨
+            pitch=0,
+        ),
+        layers=[
+            # 맛집 점 표시 레이어
+            pdk.Layer(
+                'ScatterplotLayer',
+                data=df,
+                get_position='[lon, lat]',
+                get_color='[255, 100, 100, 160]', # RGBA (빨간색, 투명도 160)
+                get_radius=5,          # ⭐ 여기서 점의 크기를 조절하세요 (미터 단위)
+                pickable=True,          # 마우스 오버 시 정보 표시 여부
+                auto_highlight=True,
+            ),
+            # 현재 내 위치 표시 (다른 색상으로 표시하고 싶을 때)
+            pdk.Layer(
+                'ScatterplotLayer',
+                data=pd.DataFrame([{'lat': float(lat), 'lon': float(lon)}]),
+                get_position='[lon, lat]',
+                get_color='[0, 128, 255]', # 파란색
+                get_radius=5,
+            )
+        ],
+        tooltip={"text": "{name}\n{address}"} # 마우스 올렸을 때 나오는 정보
+    ))
 
     # 3. 리스트 상세 정보
     st.subheader(f"🔍 주변 {keyword} 리스트 (가까운 순)")

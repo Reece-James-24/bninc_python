@@ -54,24 +54,13 @@ if uploaded_file is not None:
             combine_docs_chain = create_stuff_documents_chain(llm, prompt)
             rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
 
+            response = rag_chain.invoke({"input": "이 문서의 핵심 내용을 1000자 내외로 요약해줘."})
+            st.subheader("📝 문서 요약 결과")
+            st.write(response["answer"])
+
         # 2. 요약 결과 보여주기
         st.success("✅ 분석 완료!")
         
-        if st.button("문서 핵심 요약하기"):
-            with st.spinner("요약 중..."):
-                response = rag_chain.invoke({"input": "이 문서의 핵심 내용을 1000자 내외로 요약해줘."})
-                st.subheader("📝 문서 요약 결과")
-                st.write(response["answer"])
-
-        st.divider()
-
-        # 3. 추가 Q&A 섹션
-        st.subheader("❓ 무엇이든 물어보세요")
-        user_question = st.text_input("문서 내용에 대해 궁금한 점을 입력하세요:")
-        if user_question:
-            with st.spinner("답변 생성 중..."):
-                response = rag_chain.invoke({"input": user_question})
-                st.markdown(f"**A:** {response['answer']}")
 
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
