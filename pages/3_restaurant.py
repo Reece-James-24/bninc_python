@@ -36,7 +36,17 @@ import pydeck as pdk
 
 # 페이지 제목
 st.title("🍜 맛집 한눈에")
-st.write("카카오맵 데이터를 기반으로 현재 위치 주변의 맛집을 추천합니다.")
+st.markdown("""
+현재 위치나 원하는 좌표를 기준으로 주변 맛집을 검색하고, 상세 정보를 한눈에 확인할 수 있습니다.
+""")
+with st.container(border=True):
+    st.markdown("#### 사용 방법")
+    st.markdown("""
+    1. 사이드바에서 **위치, 검색 반경, 메뉴 카테고리**를 설정합니다.
+    2. **주변 맛집 검색** 버튼을 클릭합니다.
+    3. 추천 맛집, 지도 위치, 상세 정보를 확인합니다.
+    """)
+st.info("💡 카카오 로컬 API를 활용해 가까운 음식점 정보를 거리순으로 보여줍니다.")
 
 # 세션 상태 초기화 (추천 결과 유지용)
 if 'restaurant_results' not in st.session_state:
@@ -44,7 +54,7 @@ if 'restaurant_results' not in st.session_state:
 
 # 사이드바 설정
 with st.sidebar:
-    st.header("📍 위치 및 검색 설정")
+    st.header("📍 맛집 검색 설정")
     # 기본값: 당산역 인근
     lat = st.number_input("위도(Latitude)", value=37.53051, format="%.6f")
     lon = st.number_input("경도(Longitude)", value=126.8986, format="%.6f")
@@ -52,7 +62,7 @@ with st.sidebar:
     keyword = st.selectbox("메뉴 카테고리", ["맛집", "한식", "중식", "일식", "양식", "고기", "카페"])
 
 # 맛집 검색 버튼
-if st.sidebar.button("주변 맛집 검색", use_container_width=True):
+if st.sidebar.button("🔍 주변 맛집 검색", use_container_width=True):
     service = RestaurantService()
     with st.spinner("데이터를 불러오는 중..."):
         results = service.get_nearby_restaurants(keyword, str(lon), str(lat), radius)
@@ -67,6 +77,14 @@ if st.sidebar.button("주변 맛집 검색", use_container_width=True):
 # 결과 출력 영역
 if st.session_state.restaurant_results:
     results = st.session_state.restaurant_results
+    st.markdown("---")
+    st.subheader("🍽️ 검색 결과 요약")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("검색 결과", f"{len(results)}곳")
+    col2.metric("검색 반경", f"{radius}m")
+    col3.metric("메뉴", keyword)
     
     # 1. 랜덤 추천 섹션
     st.markdown("---")
@@ -108,7 +126,7 @@ if st.session_state.restaurant_results:
                 data=pd.DataFrame([{'lat': float(lat), 'lon': float(lon)}]),
                 get_position='[lon, lat]',
                 get_color='[0, 128, 255]', # 파란색
-                get_radius=5,
+                get_radius=10,
             )
         ],
         tooltip={"text": "{name}\n{address}"} # 마우스 올렸을 때 나오는 정보

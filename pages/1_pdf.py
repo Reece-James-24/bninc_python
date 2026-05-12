@@ -14,10 +14,26 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 st.title("📄 PDF 한눈에")
-st.write("PDF 파일을 업로드하면 AI가 내용을 분석하고 질문에 답변해 드립니다.")
+st.markdown("PDF 문서를 업로드하면 AI가 핵심 내용을 빠르게 요약해줍니다.")
+with st.container(border=True):
+    st.markdown("#### 사용 방법")
+    st.markdown("""
+    1. **PDF 파일을 업로드**합니다.
+    2. AI가 문서 내용을 분석합니다.
+    3. **요약 결과**를 확인합니다.
+    """)
+st.info("💡 문서 길이에 따라 분석 시간이 조금 걸릴 수 있습니다.")
+
+st.markdown("---")
 
 # 1. 파일 업로드
-uploaded_file = st.file_uploader("PDF 파일을 선택하세요", type="pdf")
+st.markdown("### 📎 파일 업로드")
+
+with st.container(border=True):
+    uploaded_file = st.file_uploader(
+        "PDF 파일을 선택하세요",
+        type="pdf"
+    )
 
 if uploaded_file is not None:
     # 임시 파일로 저장 (PyPDFLoader는 파일 경로가 필요함)
@@ -55,12 +71,13 @@ if uploaded_file is not None:
             rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
 
             response = rag_chain.invoke({"input": "이 문서의 핵심 내용을 1000자 내외로 요약해줘."})
-            st.subheader("📝 문서 요약 결과")
-            st.write(response["answer"])
 
-        # 2. 요약 결과 보여주기
-        st.success("✅ 분석 완료!")
-        
+            # 2. 요약 결과 보여주기
+            st.success("✅ 분석이 완료되었습니다.")
+            st.markdown("### 📝 문서 요약 결과")
+
+            with st.container(border=True):
+                st.write(response["answer"])
 
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
